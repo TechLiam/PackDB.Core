@@ -14,6 +14,15 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 3.1.x
+      - name: Set version
+        uses: rvolo/xml-replace-action@v0.3
+        with:
+          # path in filesystem to xml file
+          filepath: ${{ github.workspace }}/PackDB.Core/PackDB.Core.csproj
+          # Xpath to use when getting nodes
+          xpath: Project/PropertyGroup/*[contains(name(),'Version')]/text()
+          # value to replace with
+          replace: ${{ github.event.release.tag_name }}
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
@@ -21,4 +30,4 @@ jobs:
       - name: Test
         run: dotnet test
       - name: Publish NuGet
-        run: dotnet nuget push Core/PackDB.Core/bin/Release/PackDB.Core.0.1.0.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGETAPIKEY }}
+        run: dotnet nuget push Core/PackDB.Core/bin/Release/PackDB.Core.${{ github.event.release.tag_name }}.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGETAPIKEY }}
