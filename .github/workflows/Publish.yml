@@ -18,7 +18,7 @@ jobs:
         uses: rvolo/xml-replace-action@v0.3
         with:
           # path in filesystem to xml file
-          filepath: ${{ github.workspace }}/Core/PackDB.Core/PackDB.Core.csproj
+          filepath: ${{ github.workspace }}/PackDB.Core.csproj
           # Xpath to use when getting nodes
           xpath: Project/PropertyGroup/*[contains(name(),'Version')]/text()
           # value to replace with
