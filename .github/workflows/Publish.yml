@@ -30,4 +30,11 @@ jobs:
       - name: Test
         run: dotnet test
       - name: Publish NuGet
-        run: dotnet nuget push Core/PackDB.Core/bin/Release/PackDB.Core.${{ github.event.release.tag_name }}.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGETAPIKEY }}
+        run: dotnet nuget push ${{ github.workspace }}/PackDB.Core/bin/Release/PackDB.Core.${{ github.event.release.tag_name }}.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGETAPIKEY }}
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ github.workspace }}/PackDB.Core/bin/Release/PackDB.Core.${{ github.event.release.tag_name }}.nupkg
+          tag: ${{ github.ref }}
+        body: "This is my release text"
