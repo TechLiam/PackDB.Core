@@ -21,4 +21,4 @@ jobs:
       - name: Test
         run: dotnet test
       - name: Publish NuGet
-        run: dotnet nuget push Core\PackDB.Core\bin\Release\PackDB.Core.0.1.0.nupkg -s https://api.nuget.org/v3/index.json -k ${{ github.NUGETAPIKEY }}
+        run: dotnet nuget push Core\PackDB.Core\bin\Release\PackDB.Core.0.1.0.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGETAPIKEY }}
