@@ -14,6 +14,8 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 3.1.x
+      - name: list
+        run: ls ${{ github.workspace }}
       - name: Set version
         uses: rvolo/xml-replace-action@v0.3
         with:
