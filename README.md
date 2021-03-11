@@ -13,4 +13,4 @@ If you are going to use PackDB in your project, you should consider using an ext
 If you would like to see your extension project listed above, please raise an issue or create a pull request to add it in.
 
 ## Extending PackDB
-If you need or would like to create an extention for PackDB please do so. To help you get started we have written a tutorial that explains each part that you will need to do.
+If you need or would like to create an extention for PackDB please do so. To help you get started we have written a [tutorial](https://github.com/TechLiam/PackDB.Core/wiki) that explains each part that you will need to do.
