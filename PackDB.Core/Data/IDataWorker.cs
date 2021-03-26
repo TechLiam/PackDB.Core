@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 
 namespace PackDB.Core.Data
 {
+    /// <summary>
+    /// The data worker is responsible for managing the operations of storing, retrieving and deleting data records.
+    /// </summary>
     public interface IDataWorker
     {
         /// <summary>

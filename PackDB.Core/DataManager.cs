@@ -322,5 +322,10 @@ namespace PackDB.Core
                 return id;
             }
         }
+
+        public Task<AuditLog> GetAuditLog<TDataType>(int id) where TDataType : DataEntity
+        {
+            return typeof(TDataType).IsDefined(typeof(AuditAttribute), true) ? AuditWorker.ReadAllEvents<TDataType>(id) : null;
+        }
     }
 }

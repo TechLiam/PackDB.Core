@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using PackDB.Core.Auditing;
 using PackDB.Core.Data;
 
 namespace PackDB.Core
@@ -64,5 +65,12 @@ namespace PackDB.Core
         /// <typeparam name="TDataType">The type of data to look up on</typeparam>
         /// <returns>The next available id to use</returns>
         int GetNextId<TDataType>() where TDataType : DataEntity;
+        /// <summary>
+        /// Get the audit log for the object if it is audited
+        /// </summary>
+        /// <param name="id">The id of the object to get the logs for</param>
+        /// <typeparam name="TDataType">The type of the data to get the logs for</typeparam>
+        /// <returns>The audit log of the data or null if the data is not audited or there are no logs</returns>
+        Task<AuditLog> GetAuditLog<TDataType>(int id) where TDataType : DataEntity;
     }
 }
