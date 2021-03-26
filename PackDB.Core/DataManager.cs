@@ -49,6 +49,15 @@ namespace PackDB.Core
             }
         }
 
+        public IAsyncEnumerable<TDataType> ReadAll<TDataType>() where TDataType : DataEntity
+        {
+            using (Logger.BeginScope("{Operation} is {Action} {DataType} with Id ({Id})", nameof(DataManager),
+                "reading all", typeof(TDataType).Name))
+            {
+               return DataStreamer.ReadAll<TDataType>();
+            }
+        }
+
         public async IAsyncEnumerable<TDataType> ReadIndex<TDataType, TKeyType>(TKeyType key,
             Expression<Func<TDataType, string>> indexProperty) where TDataType : DataEntity
         {
