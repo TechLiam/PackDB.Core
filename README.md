@@ -1,22 +1,16 @@
-# PackDB [![Built and Tested](https://github.com/TechLiam/PackDB/actions/workflows/BuildAndTestAction.yml/badge.svg)](https://github.com/TechLiam/PackDB/actions/workflows/BuildAndTestAction.yml) [![CodeQL](https://github.com/TechLiam/PackDB/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/TechLiam/PackDB/actions/workflows/codeql-analysis.yml)
+# PackDB [![Built and tested](https://github.com/TechLiam/PackDB.Core/actions/workflows/BuildAndTestAction.yml/badge.svg)](https://github.com/TechLiam/PackDB.Core/actions/workflows/BuildAndTestAction.yml) [![Security Code scan](https://github.com/TechLiam/PackDB.Core/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/TechLiam/PackDB.Core/actions/workflows/codeql-analysis.yml)
 PackDB was created to provide a .Net implementation of a data access layer that uses MessagePack as the data Serializer on the backend.
 
-The current solution allows data to be stored using the following methods:
-- OS File storage
+PackDB.Core provides the basics that allow a user of PackDB to interact with the underlying PackDB extension projects.
 
-The solution was built with extensibility in mind and should allow for other storage systems to be used.
+A key concept for PackDB is to be simple to expand to be used in different ways.
 
-## Why was this created?
-PackDB was created as part of a separate project that aimed to use local disk storage as the primary data repository. Two of the projects' main goals were to store data with a minimal footprint and not be reliant on any other technologies.
+If you are going to use PackDB in your project, you should consider using an extension project rather than PackDB.Core as the core project doesn't provide a lot of functionality and is intended to be included as a dependency by extension projects.
 
-## Who can use this?
-Anyone can use PackDB if they wish it is published under the MIT licence and you use at your own risk.
+## Offical extension project
+- [PackDB.FileSystem](https://github.com/TechLiam/PackDB.FileSystem)
 
-## Can I add to the project?
-Yes, please feel free to submit push requests to this repo or create stand-alone extension projects that can store data to other storage systems.
+If you would like to see your extension project listed above, please raise an issue or create a pull request to add it in.
 
-## Documentaton
-We will be adding documentation on every aspect of the PackDB solution in the [Wiki](https://github.com/TechLiam/PackDB/wiki) section
-
-## Help
-If you need help using this solution please create an issue in the issue tab and ask your question we will be happy to help
+## Extending PackDB
+If you need or would like to create an extention for PackDB please do so. To help you get started we have written a [tutorial](https://github.com/TechLiam/PackDB.Core/wiki) that explains each part that you will need to do.
