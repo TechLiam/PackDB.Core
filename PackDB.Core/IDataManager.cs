@@ -7,6 +7,9 @@ using PackDB.Core.Data;
 
 namespace PackDB.Core
 {
+    /// <summary>
+    /// A manager for data that controls how data is processed
+    /// </summary>
     public interface IDataManager
     {
         /// <summary>
