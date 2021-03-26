@@ -54,7 +54,7 @@ namespace PackDB.Core
             using (Logger.BeginScope("{Operation} is {Action} {DataType} with Id ({Id})", nameof(DataManager),
                 "reading all", typeof(TDataType).Name))
             {
-               return DataStreamer.ReadAll<TDataType>();
+                return DataStreamer.ReadAll<TDataType>();
             }
         }
 
@@ -325,7 +325,9 @@ namespace PackDB.Core
 
         public Task<AuditLog> GetAuditLog<TDataType>(int id) where TDataType : DataEntity
         {
-            return typeof(TDataType).IsDefined(typeof(AuditAttribute), true) ? AuditWorker.ReadAllEvents<TDataType>(id) : null;
+            return typeof(TDataType).IsDefined(typeof(AuditAttribute), true)
+                ? AuditWorker.ReadAllEvents<TDataType>(id)
+                : null;
         }
     }
 }
