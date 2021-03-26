@@ -22,11 +22,20 @@
             0.1.0 - Alpha release
 0.2.0 - Added auto versioning for GitHub deploy
 0.3.0 - Added read all
+0.3.1 - Enabled XML documentation
         </PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <NeutralLanguage>en-GB</NeutralLanguage>
         <AssemblyName>PackDB.Core</AssemblyName>
         <SignAssembly>false</SignAssembly>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DocumentationFile>bin\Debug\PackDB.Core.xml</DocumentationFile>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DocumentationFile>bin\Release\PackDB.Core.xml</DocumentationFile>
     </PropertyGroup>
     
     <ItemGroup>
