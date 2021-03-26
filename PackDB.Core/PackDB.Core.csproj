@@ -20,7 +20,8 @@
         <PackageTags>PackDB, MessagePack, Data, Data layer, Storage</PackageTags>
         <PackageReleaseNotes>
             0.1.0 - Alpha release
-            0.2.0 - Added auto versioning for GitHub deploy
+0.2.0 - Added auto versioning for GitHub deploy
+0.3.0 - Added read all
         </PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <NeutralLanguage>en-GB</NeutralLanguage>
