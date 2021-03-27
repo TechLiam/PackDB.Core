@@ -22,17 +22,19 @@ namespace PackDB.Core.Tests
         {
             Randomizer = Randomizer.CreateRandomizer();
 
-            ExpectedBasicEntity = new BasicEntity {Id = Randomizer.Next()};
+            ExpectedBasicEntity1 = new BasicEntity {Id = Randomizer.Next()};
+            ExpectedBasicEntity2 = new BasicEntity {Id = Randomizer.Next()};
             ExpectedIndexedEntity = new IndexedEntity {Id = Randomizer.Next(), IndexedValue = Randomizer.GetString()};
             ExpectedAuditedEntity = new AuditedEntity {Id = Randomizer.Next()};
+            ExpectedAuditedEntityAuditLog = new AuditLog();
 
             MockDataStream = new Mock<IDataWorker>();
             MockDataStream
-                .Setup(x => x.Exists<BasicEntity>(ExpectedBasicEntity.Id))
+                .Setup(x => x.Exists<BasicEntity>(ExpectedBasicEntity1.Id))
                 .ReturnsAsync(true);
             MockDataStream
-                .Setup(x => x.Read<BasicEntity>(ExpectedBasicEntity.Id))
-                .ReturnsAsync(ExpectedBasicEntity);
+                .Setup(x => x.Read<BasicEntity>(ExpectedBasicEntity1.Id))
+                .ReturnsAsync(ExpectedBasicEntity1);
             MockDataStream
                 .Setup(x => x.Exists<BasicEntity>(ExpectedIndexedEntity.Id))
                 .ReturnsAsync(true);
@@ -58,7 +60,7 @@ namespace PackDB.Core.Tests
                 .Setup(x => x.Read<AuditedEntity>(ExpectedAuditedEntity.Id))
                 .ReturnsAsync(ExpectedAuditedEntity);
             MockDataStream
-                .Setup(x => x.WriteAndCommit(ExpectedBasicEntity.Id, ExpectedBasicEntity))
+                .Setup(x => x.WriteAndCommit(ExpectedBasicEntity1.Id, ExpectedBasicEntity1))
                 .ReturnsAsync(true);
             MockDataStream
                 .Setup(x => x.WriteAndCommit(ExpectedIndexedEntity.Id, ExpectedIndexedEntity))
@@ -70,7 +72,7 @@ namespace PackDB.Core.Tests
                 .Setup(x => x.Commit<BasicEntity>(ExpectedAuditedEntity.Id))
                 .ReturnsAsync(true);
             MockDataStream
-                .Setup(x => x.Delete<BasicEntity>(ExpectedBasicEntity.Id))
+                .Setup(x => x.Delete<BasicEntity>(ExpectedBasicEntity1.Id))
                 .ReturnsAsync(true);
             MockDataStream
                 .Setup(x => x.Delete<AuditedEntity>(ExpectedAuditedEntity.Id))
@@ -79,6 +81,9 @@ namespace PackDB.Core.Tests
             MockDataStream
                 .Setup(x => x.NextId<BasicEntity>())
                 .Returns(ExpectedNextBasicEntityId);
+            MockDataStream
+                .Setup(x => x.ReadAll<BasicEntity>())
+                .Returns(ExpectedBasicEntityList);
 
             MockIndexer = new Mock<IIndexWorker>();
             MockIndexer
@@ -89,7 +94,7 @@ namespace PackDB.Core.Tests
                     x => x.GetIdsFromIndex<IndexedEntity, string>("IndexedValue", ExpectedIndexedEntity.IndexedValue))
                 .Returns(ExpectedIndexEntityList);
             MockIndexer
-                .Setup(x => x.Index(ExpectedBasicEntity))
+                .Setup(x => x.Index(ExpectedBasicEntity1))
                 .ReturnsAsync(true);
             MockIndexer
                 .Setup(x => x.Index(ExpectedIndexedEntity))
@@ -98,7 +103,7 @@ namespace PackDB.Core.Tests
                 .Setup(x => x.Index(ExpectedAuditedEntity))
                 .ReturnsAsync(true);
             MockIndexer
-                .Setup(x => x.Unindex(ExpectedBasicEntity))
+                .Setup(x => x.Unindex(ExpectedBasicEntity1))
                 .ReturnsAsync(true);
             MockIndexer
                 .Setup(x => x.Unindex(ExpectedAuditedEntity))
@@ -117,11 +122,20 @@ namespace PackDB.Core.Tests
             MockAudit
                 .Setup(x => x.CommitEvents(ExpectedAuditedEntity))
                 .ReturnsAsync(true);
+            MockAudit
+                .Setup(x => x.ReadAllEvents<AuditedEntity>(ExpectedAuditedEntity.Id))
+                .ReturnsAsync(ExpectedAuditedEntityAuditLog);
 
             MockLogger = new Mock<ILogger>();
 
             DataManager = new DataManager(MockDataStream.Object, MockIndexer.Object, MockAudit.Object,
                 MockLogger.Object);
+        }
+
+        private async IAsyncEnumerable<BasicEntity> ExpectedBasicEntityList()
+        {
+            yield return await Task.FromResult(ExpectedBasicEntity1);
+            yield return await Task.FromResult(ExpectedBasicEntity2);
         }
 
         private async IAsyncEnumerable<int> ExpectedIndexEntityList()
@@ -141,9 +155,11 @@ namespace PackDB.Core.Tests
         }
 
         private DataManager DataManager { get; set; }
-        private static BasicEntity ExpectedBasicEntity { get; set; }
+        private static BasicEntity ExpectedBasicEntity1 { get; set; }
+        private static BasicEntity ExpectedBasicEntity2 { get; set; }
         private static IndexedEntity ExpectedIndexedEntity { get; set; }
         private static AuditedEntity ExpectedAuditedEntity { get; set; }
+        private static AuditLog ExpectedAuditedEntityAuditLog { get; set; }
         private static int ExpectedNextBasicEntityId { get; set; }
         private Randomizer Randomizer { get; set; }
         private Mock<IDataWorker> MockDataStream { get; set; }
@@ -160,7 +176,7 @@ namespace PackDB.Core.Tests
         [Test(Author = "PackDB Creator")]
         public async Task ReadWhenThereIsData()
         {
-            Assert.AreSame(ExpectedBasicEntity, await DataManager.Read<BasicEntity>(ExpectedBasicEntity.Id));
+            Assert.AreSame(ExpectedBasicEntity1, await DataManager.Read<BasicEntity>(ExpectedBasicEntity1.Id));
         }
 
         [Test(Author = "PackDB Creator")]
@@ -173,18 +189,29 @@ namespace PackDB.Core.Tests
         [Test(Author = "PackDB Creator")]
         public async Task ReadMultipleWhenThereIsData()
         {
-            var data = DataManager.Read<BasicEntity>(new[] {ExpectedBasicEntity.Id, ExpectedIndexedEntity.Id});
+            var data = DataManager.Read<BasicEntity>(new[] {ExpectedBasicEntity1.Id, ExpectedIndexedEntity.Id});
             var results = new List<BasicEntity>();
             await foreach (var d in data) results.Add(d);
             Assert.AreEqual(2, results.Count());
-            Assert.AreSame(ExpectedBasicEntity, results.ElementAt(0));
+            Assert.AreSame(ExpectedBasicEntity1, results.ElementAt(0));
             Assert.AreSame(ExpectedIndexedEntity, results.ElementAt(1));
+        }
+
+        [Test(Author = "PackDB Creator")]
+        public async Task ReadAll()
+        {
+            var data = DataManager.ReadAll<BasicEntity>();
+            var results = new List<BasicEntity>();
+            await foreach (var d in data) results.Add(d);
+            Assert.AreEqual(2, results.Count());
+            Assert.AreSame(ExpectedBasicEntity1, results.ElementAt(0));
+            Assert.AreSame(ExpectedBasicEntity2, results.ElementAt(1));
         }
 
         [Test(Author = "PackDB Creator")]
         public async Task ReadWhenIndexPropertyIsNotIndexed()
         {
-            var data = DataManager.ReadIndex<BasicEntity, string>(ExpectedBasicEntity.Value1, x => x.Value1);
+            var data = DataManager.ReadIndex<BasicEntity, string>(ExpectedBasicEntity1.Value1, x => x.Value1);
             var result = new List<BasicEntity>();
             await foreach (var d in data) result.Add(d);
             Assert.IsEmpty(result);
@@ -195,7 +222,7 @@ namespace PackDB.Core.Tests
         public async Task ReadWhenIndexDoesNotExist()
         {
             MockIndexer.Setup(x => x.IndexExist<IndexedEntity>("IndexedValue")).ReturnsAsync(false);
-            var data = DataManager.ReadIndex<IndexedEntity, string>(ExpectedBasicEntity.Value1, x => x.IndexedValue);
+            var data = DataManager.ReadIndex<IndexedEntity, string>(ExpectedBasicEntity1.Value1, x => x.IndexedValue);
             var result = new List<BasicEntity>();
             await foreach (var d in data) result.Add(d);
             Assert.IsEmpty(result);
@@ -246,7 +273,7 @@ namespace PackDB.Core.Tests
             MockDataStream
                 .Setup(x => x.WriteAndCommit(It.IsAny<int>(), It.IsAny<DataEntity>()))
                 .ReturnsAsync(false);
-            var result = await DataManager.Write(ExpectedBasicEntity);
+            var result = await DataManager.Write(ExpectedBasicEntity1);
             MockDataStream
                 .Verify(x => x.Rollback(It.IsAny<int>(), It.IsAny<DataEntity>()), Times.Never);
             MockIndexer
@@ -302,7 +329,7 @@ namespace PackDB.Core.Tests
         [Test(Author = "PackDB Creator", ExpectedResult = true)]
         public async Task<bool> WriteDataWithNoAuditOrIndexSuccess()
         {
-            var result = await DataManager.Write(ExpectedBasicEntity);
+            var result = await DataManager.Write(ExpectedBasicEntity1);
             MockDataStream
                 .Verify(x => x.Rollback(It.IsAny<int>(), It.IsAny<DataEntity>()), Times.Never);
             MockAudit
@@ -552,33 +579,33 @@ namespace PackDB.Core.Tests
         public async Task<bool> DeleteDataWhenItDoesNotExist()
         {
             MockDataStream
-                .Setup(x => x.Exists<BasicEntity>(ExpectedBasicEntity.Id))
+                .Setup(x => x.Exists<BasicEntity>(ExpectedBasicEntity1.Id))
                 .ReturnsAsync(false);
-            return await DataManager.Delete<BasicEntity>(ExpectedBasicEntity.Id);
+            return await DataManager.Delete<BasicEntity>(ExpectedBasicEntity1.Id);
         }
 
         [Test(Author = "PackDB Creator", ExpectedResult = false)]
         public async Task<bool> DeleteDataWhenDeleteFails()
         {
             MockDataStream
-                .Setup(x => x.Delete<DataEntity>(ExpectedBasicEntity.Id))
+                .Setup(x => x.Delete<DataEntity>(ExpectedBasicEntity1.Id))
                 .ReturnsAsync(false);
-            return await DataManager.Delete<BasicEntity>(ExpectedBasicEntity.Id);
+            return await DataManager.Delete<BasicEntity>(ExpectedBasicEntity1.Id);
         }
 
         [Test(Author = "PackDB Creator", ExpectedResult = false)]
         public async Task<bool> DeleteDataUnindexFails()
         {
             MockIndexer
-                .Setup(x => x.Unindex(ExpectedBasicEntity))
+                .Setup(x => x.Unindex(ExpectedBasicEntity1))
                 .ReturnsAsync(false);
-            return await DataManager.Delete<BasicEntity>(ExpectedBasicEntity.Id);
+            return await DataManager.Delete<BasicEntity>(ExpectedBasicEntity1.Id);
         }
 
         [Test(Author = "PackDB Creator", ExpectedResult = true)]
         public async Task<bool> DeleteDataSuccess()
         {
-            return await DataManager.Delete<BasicEntity>(ExpectedBasicEntity.Id);
+            return await DataManager.Delete<BasicEntity>(ExpectedBasicEntity1.Id);
         }
 
         [Test(Author = "PackDB Creator", ExpectedResult = false)]
@@ -659,19 +686,19 @@ namespace PackDB.Core.Tests
         [Test(Author = "PackDB Creator", ExpectedResult = true)]
         public async Task<bool> RestoreDataWhenItExists()
         {
-            return await DataManager.Restore<BasicEntity>(ExpectedBasicEntity.Id);
+            return await DataManager.Restore<BasicEntity>(ExpectedBasicEntity1.Id);
         }
 
         [Test(Author = "PackDB Creator", ExpectedResult = false)]
         public async Task<bool> RestoreDataWhenDoesNotExistButUndeleteFails()
         {
             MockDataStream
-                .Setup(x => x.Exists<BasicEntity>(ExpectedBasicEntity.Id))
+                .Setup(x => x.Exists<BasicEntity>(ExpectedBasicEntity1.Id))
                 .ReturnsAsync(false);
             MockDataStream
-                .Setup(x => x.Undelete<BasicEntity>(ExpectedBasicEntity.Id))
+                .Setup(x => x.Undelete<BasicEntity>(ExpectedBasicEntity1.Id))
                 .ReturnsAsync(false);
-            return await DataManager.Restore<BasicEntity>(ExpectedBasicEntity.Id);
+            return await DataManager.Restore<BasicEntity>(ExpectedBasicEntity1.Id);
         }
 
         [Test(Author = "PackDB Creator", ExpectedResult = false)]
@@ -770,21 +797,21 @@ namespace PackDB.Core.Tests
         public async Task<bool> RestoreDataWhenDoesNotExistButIndexingFails()
         {
             MockDataStream
-                .SetupSequence(x => x.Exists<BasicEntity>(ExpectedBasicEntity.Id))
+                .SetupSequence(x => x.Exists<BasicEntity>(ExpectedBasicEntity1.Id))
                 .ReturnsAsync(false)
                 .ReturnsAsync(true);
             MockDataStream
-                .Setup(x => x.Undelete<BasicEntity>(ExpectedBasicEntity.Id))
+                .Setup(x => x.Undelete<BasicEntity>(ExpectedBasicEntity1.Id))
                 .ReturnsAsync(true);
             MockAudit
-                .Setup(x => x.UndeleteEvent(ExpectedBasicEntity))
+                .Setup(x => x.UndeleteEvent(ExpectedBasicEntity1))
                 .ReturnsAsync(true);
             MockIndexer
-                .Setup(x => x.Index(ExpectedBasicEntity))
+                .Setup(x => x.Index(ExpectedBasicEntity1))
                 .ReturnsAsync(false);
-            var result = await DataManager.Restore<BasicEntity>(ExpectedBasicEntity.Id);
+            var result = await DataManager.Restore<BasicEntity>(ExpectedBasicEntity1.Id);
             MockDataStream
-                .Verify(x => x.Delete<BasicEntity>(ExpectedBasicEntity.Id), Times.Once);
+                .Verify(x => x.Delete<BasicEntity>(ExpectedBasicEntity1.Id), Times.Once);
             return result;
         }
 
@@ -792,21 +819,21 @@ namespace PackDB.Core.Tests
         public async Task<bool> RestoreDataWhenDoesNotExistRestoredSuccessfully()
         {
             MockDataStream
-                .SetupSequence(x => x.Exists<BasicEntity>(ExpectedBasicEntity.Id))
+                .SetupSequence(x => x.Exists<BasicEntity>(ExpectedBasicEntity1.Id))
                 .ReturnsAsync(false)
                 .ReturnsAsync(true);
             MockDataStream
-                .Setup(x => x.Undelete<BasicEntity>(ExpectedBasicEntity.Id))
+                .Setup(x => x.Undelete<BasicEntity>(ExpectedBasicEntity1.Id))
                 .ReturnsAsync(true);
             MockAudit
-                .Setup(x => x.UndeleteEvent(ExpectedBasicEntity))
+                .Setup(x => x.UndeleteEvent(ExpectedBasicEntity1))
                 .ReturnsAsync(true);
             MockIndexer
-                .Setup(x => x.Index(ExpectedBasicEntity))
+                .Setup(x => x.Index(ExpectedBasicEntity1))
                 .ReturnsAsync(true);
-            var result = await DataManager.Restore<BasicEntity>(ExpectedBasicEntity.Id);
+            var result = await DataManager.Restore<BasicEntity>(ExpectedBasicEntity1.Id);
             MockDataStream
-                .Verify(x => x.Delete<BasicEntity>(ExpectedBasicEntity.Id), Times.Never);
+                .Verify(x => x.Delete<BasicEntity>(ExpectedBasicEntity1.Id), Times.Never);
             return result;
         }
 
@@ -815,5 +842,20 @@ namespace PackDB.Core.Tests
         {
             Assert.AreEqual(ExpectedNextBasicEntityId, DataManager.GetNextId<BasicEntity>());
         }
+
+        [Test(Author = "PackDB Creator")]
+        public void GetAuditLogWhenNotAnAuditableType()
+        {
+            var result = DataManager.GetAuditLog<BasicEntity>(ExpectedBasicEntity1.Id);
+            Assert.IsNull(result);
+        }
+        
+        [Test(Author = "PackDB Creator")]
+        public  async Task GetAuditLogWhenAnAuditableType()
+        {
+            var result = await DataManager.GetAuditLog<AuditedEntity>(ExpectedAuditedEntity.Id);
+            Assert.AreSame(ExpectedAuditedEntityAuditLog,result);
+        }
+
     }
 }
