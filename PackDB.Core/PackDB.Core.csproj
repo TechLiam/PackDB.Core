@@ -23,7 +23,7 @@
 0.2.0 - Added auto versioning for GitHub deploy
 0.3.0 - Added read all
 0.3.1 - Enabled XML documentation
-0.4.0 - Added read all and get audit methods
+0.4.0 - Added read all audit logs methods to data manager
         </PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <NeutralLanguage>en-GB</NeutralLanguage>
