@@ -24,6 +24,7 @@
 0.3.0 - Added read all
 0.3.1 - Enabled XML documentation
 0.4.0 - Added read all audit logs methods to data manager
+0.5.0 - Added IsUnique to Index attribute to allow extentions to restrict data to be unique
         </PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <NeutralLanguage>en-GB</NeutralLanguage>
