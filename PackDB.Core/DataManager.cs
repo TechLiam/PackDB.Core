@@ -59,7 +59,7 @@ namespace PackDB.Core
         }
 
         public async IAsyncEnumerable<TDataType> ReadIndex<TDataType, TKeyType>(TKeyType key,
-            Expression<Func<TDataType, string>> indexProperty) where TDataType : DataEntity
+            Expression<Func<TDataType, TKeyType>> indexProperty) where TDataType : DataEntity
         {
             var indexMember = ((MemberExpression) indexProperty.Body).Member;
             using (Logger.BeginScope("{Operation} is {Action} {IndexName} for {DataType} with a key {key}",

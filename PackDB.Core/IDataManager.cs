@@ -44,7 +44,7 @@ namespace PackDB.Core
         /// <typeparam name="TKeyType">The type of the key</typeparam>
         /// <returns>An enumerable of the data indexed under the key</returns>
         IAsyncEnumerable<TDataType> ReadIndex<TDataType, TKeyType>(TKeyType key,
-            Expression<Func<TDataType, string>> indexProperty) where TDataType : DataEntity;
+            Expression<Func<TDataType, TKeyType>> indexProperty) where TDataType : DataEntity;
 
         /// <summary>
         ///     Writes the data to the storage system
