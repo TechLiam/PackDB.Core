@@ -27,6 +27,7 @@ namespace PackDB.Core.Tests
             ExpectedIndexedEntity = new IndexedEntity {Id = Randomizer.Next(), IndexedValue = Randomizer.GetString()};
             ExpectedAuditedEntity = new AuditedEntity {Id = Randomizer.Next()};
             ExpectedAuditedEntityAuditLog = new AuditLog();
+            ExpectedIndexKey = new IndexKey<string>() { Value = Randomizer.GetString() };
 
             MockDataStream = new Mock<IDataWorker>();
             MockDataStream
@@ -94,6 +95,10 @@ namespace PackDB.Core.Tests
                     x => x.GetIdsFromIndex<IndexedEntity, string>("IndexedValue", ExpectedIndexedEntity.IndexedValue))
                 .Returns(ExpectedIndexEntityList);
             MockIndexer
+                .Setup(
+                    x => x.GetKeysFromIndex<IndexedEntity, string>("IndexedValue"))
+                .Returns(ExpectedIndexKeysEntityList);
+            MockIndexer
                 .Setup(x => x.Index(ExpectedBasicEntity1))
                 .ReturnsAsync(true);
             MockIndexer
@@ -154,6 +159,22 @@ namespace PackDB.Core.Tests
             yield return await Task.FromResult(Randomizer.Next());
         }
 
+        private async IAsyncEnumerable<IndexKey<string>> EmptyIndexKeysEntityList()
+        {
+            await Task.CompletedTask;
+            yield break;
+        }
+
+        private async IAsyncEnumerable<IndexKey<string>> RandomIndexKeysEntityList()
+        {
+            yield return await Task.FromResult(new IndexKey<string>(){ Value = Randomizer.GetString() });
+        }
+
+        private async IAsyncEnumerable<IndexKey<string>> ExpectedIndexKeysEntityList()
+        {
+            yield return await Task.FromResult(ExpectedIndexKey);
+        }
+
         private DataManager DataManager { get; set; }
         private static BasicEntity ExpectedBasicEntity1 { get; set; }
         private static BasicEntity ExpectedBasicEntity2 { get; set; }
@@ -161,6 +182,7 @@ namespace PackDB.Core.Tests
         private static AuditedEntity ExpectedAuditedEntity { get; set; }
         private static AuditLog ExpectedAuditedEntityAuditLog { get; set; }
         private static int ExpectedNextBasicEntityId { get; set; }
+        private static IndexKey<string> ExpectedIndexKey { get; set; }
         private Randomizer Randomizer { get; set; }
         private Mock<IDataWorker> MockDataStream { get; set; }
         private Mock<IIndexWorker> MockIndexer { get; set; }
@@ -266,7 +288,50 @@ namespace PackDB.Core.Tests
             Assert.AreEqual(result.Count(), 1);
             Assert.AreSame(ExpectedIndexedEntity, result.ElementAt(0));
         }
+        
+        [Test(Author = "PackDB Creator")]
+        public async Task ReadKeysWhenIndexPropertyIsNotIndexed()
+        {
+            var data = DataManager.ReadIndexKeys<BasicEntity, string>(x => x.Value1);
+            var result = new List<IndexKey<string>>();
+            await foreach (var d in data) result.Add(d);
+            Assert.IsEmpty(result);
+            MockIndexer.Verify(x => x.IndexExist<BasicEntity>(It.IsAny<string>()), Times.Never);
+        }
 
+        [Test(Author = "PackDB Creator")]
+        public async Task ReadKeysWhenIndexDoesNotExist()
+        {
+            MockIndexer.Setup(x => x.IndexExist<IndexedEntity>("IndexedValue")).ReturnsAsync(false);
+            var data = DataManager.ReadIndexKeys<IndexedEntity, string>(x => x.IndexedValue);
+            var result = new List<IndexKey<string>>();
+            await foreach (var d in data) result.Add(d);
+            Assert.IsEmpty(result);
+        }
+
+        [Test(Author = "PackDB Creator")]
+        public async Task ReadKeysWhenIndexHasNoValue()
+        {
+            MockIndexer
+                .Setup(
+                    x => x.GetKeysFromIndex<IndexedEntity, string>("IndexedValue"))
+                .Returns(EmptyIndexKeysEntityList);
+            var data = DataManager.ReadIndexKeys<IndexedEntity, string>(x => x.IndexedValue);
+            var results = new List<IndexKey<string>>();
+            await foreach (var d in data) results.Add(d);
+            Assert.IsFalse(results.Any());
+        }
+
+        [Test(Author = "PackDB Creator")]
+        public async Task ReadKeysWhenIndexHasAValueAndThereIsData()
+        {
+            var data = DataManager.ReadIndexKeys<IndexedEntity, string>(x => x.IndexedValue);
+            var result = new List<IndexKey<string>>();
+            await foreach (var d in data) result.Add(d);
+            Assert.AreEqual(result.Count(), 1);
+            Assert.AreSame(ExpectedIndexKey, result.ElementAt(0));
+        }
+        
         [Test(Author = "PackDB Creator", ExpectedResult = false)]
         public async Task<bool> WriteDataWithNoAuditFails()
         {

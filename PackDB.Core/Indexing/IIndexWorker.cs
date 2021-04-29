@@ -44,5 +44,7 @@ namespace PackDB.Core.Indexing
         /// <typeparam name="TDataType">The data type that should have indexable properties</typeparam>
         /// <returns>True if all properties are unindexed</returns>
         Task<bool> Unindex<TDataType>(TDataType data) where TDataType : DataEntity;
+
+        IAsyncEnumerable<IndexKey<TKeyType>> GetKeysFromIndex<TDataType, TKeyType>(string indexName) where TDataType : DataEntity;
     }
 }

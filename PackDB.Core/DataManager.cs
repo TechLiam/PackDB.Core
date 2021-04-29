@@ -84,6 +84,30 @@ namespace PackDB.Core
             }
         }
 
+        public async IAsyncEnumerable<IndexKey<TKeyType>> ReadIndexKeys<TDataType, TKeyType>(Expression<Func<TDataType, TKeyType>> indexProperty) where TDataType : DataEntity
+        {
+            var indexMember = ((MemberExpression) indexProperty.Body).Member;
+            using (Logger.BeginScope("{Operation} is {Action} {IndexName} for {DataType}",
+                nameof(DataManager), "getting keys from index", indexMember.Name, typeof(TDataType).Name))
+            {
+                if (indexMember.IsDefined(typeof(IndexAttribute), true))
+                {
+                    Logger.LogTrace("Property is indexed");
+                    var indexName = indexMember.Name;
+                    if (await IndexWorker.IndexExist<TDataType>(indexName))
+                    {
+                        var keys = IndexWorker.GetKeysFromIndex<TDataType, TKeyType>(indexName);
+                        Logger.LogInformation("Found keys in index", keys);
+                        await foreach (var key in keys) yield return key;
+                    }
+
+                    yield break;
+                }
+
+                Logger.LogWarning("The property used is not marked as indexed");
+            }
+        }
+
         public async Task<bool> Write<TDataType>(TDataType data) where TDataType : DataEntity
         {
             using (Logger.BeginScope("{Operation} is {Action} {DataType} with Id ({Id})", nameof(DataManager),

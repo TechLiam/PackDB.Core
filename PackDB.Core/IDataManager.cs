@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using PackDB.Core.Auditing;
 using PackDB.Core.Data;
+using PackDB.Core.Indexing;
 
 namespace PackDB.Core
 {
@@ -45,6 +46,15 @@ namespace PackDB.Core
         /// <returns>An enumerable of the data indexed under the key</returns>
         IAsyncEnumerable<TDataType> ReadIndex<TDataType, TKeyType>(TKeyType key,
             Expression<Func<TDataType, TKeyType>> indexProperty) where TDataType : DataEntity;
+        
+        /// <summary>
+        ///     Get keys that have been indexed for the property provided
+        /// </summary>
+        /// <param name="indexProperty">The property the key is for</param>
+        /// <typeparam name="TDataType">The type of data that is being got</typeparam>
+        /// <typeparam name="TKeyType">The type of the key</typeparam>
+        /// <returns></returns>
+        IAsyncEnumerable<IndexKey<TKeyType>> ReadIndexKeys<TDataType, TKeyType>(Expression<Func<TDataType, TKeyType>> indexProperty) where TDataType : DataEntity;
 
         /// <summary>
         ///     Writes the data to the storage system
